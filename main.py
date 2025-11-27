@@ -1,33 +1,45 @@
 from machine import Pin
 import dht
 import time
+import json
 
-SENSOR_PIN = 15
-INTERVAL_SECONDS = 2
-
-
-def get_sensor():
-    return dht.DHT22(Pin(SENSOR_PIN))
+DEFAULT_SENSOR_PIN = 15
+DEFAULT_INTERVAL_SECONDS = 10
 
 
-def read_sensor():
-    sensor = get_sensor()
-    sensor.measure()
-    
-    temp = sensor.temperature()
-    humidity = sensor.humidity()
-    
-    return temp, humidity
+class Config:
+    def __init__(self, data):
+        self.monitoring_interval = data.get(
+            "monitoring_interval", DEFAULT_INTERVAL_SECONDS
+        )
+        self.sensor_pin = data.get("sensor_pin", DEFAULT_SENSOR_PIN)
+        self.api_key = data.get("api_key")
+        self.api_url = data.get("api_url")
 
 
+def load_config():
+    try:
+        with open("config.json") as f:
+            data = json.load(f)
+        return Config(data)
+    except OSError:
+        print("Warning: config.json not found, using defaults")
+        return Config({})
 
 def monitor():
+    config = load_config()
+    sensor = dht.DHT22(Pin(config.sensor_pin))
+
     while True:
         try:
-            temp, humidity = read_sensor()
+            sensor.measure()
+            temp = sensor.temperature()
+            humidity = sensor.humidity()
+
             print(f"Temperature: {temp}\u00b0C, Humidity: {humidity}%")
         except OSError as e:
             print("Failed to read sensor:", e)
-        time.sleep(INTERVAL_SECONDS)
+        time.sleep(config.monitoring_interval)
+
 
 monitor()
