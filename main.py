@@ -63,13 +63,13 @@ def monitor():
                 lcd.fill(lcd.BLACK)
 
                 if app_state["screen"] == Screen.HOME:
-                    render_home_screen(lcd, sensors)
+                    render_home_screen(lcd, sensors, config)
                 elif app_state["screen"] == Screen.SENSOR_1:
-                    render_sensor_screen(lcd, sensors,  "temp_1")
+                    render_sensor_screen(lcd, sensors,  "temp_1", config)
                 elif app_state["screen"] == Screen.SENSOR_2:
-                    render_sensor_screen(lcd, sensors,  "temp_2")
+                    render_sensor_screen(lcd, sensors,  "temp_2", config)
                 elif app_state["screen"] == Screen.SENSOR_3:
-                    render_sensor_screen(lcd, sensors, "temp_3")
+                    render_sensor_screen(lcd, sensors, "temp_3", config)
                 else:
                     raise ValueError(
                         f"Unable to render screen {app_state['screen']}: No renderer available"

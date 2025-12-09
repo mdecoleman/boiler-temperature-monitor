@@ -1,9 +1,5 @@
-from config import load_config
-
 PADDING = 8
 LINE_HEIGHT = 8
-
-config = load_config()
 
 def find_sensor_by_id(sensors, id):
     for s in sensors:
@@ -23,7 +19,7 @@ def get_line_position(line):
 
     return line_position
 
-def render_sensor_reading(lcd, sensors, sensor_key, start_line):
+def render_sensor_reading(lcd, sensors, sensor_key, start_line, config):
     sensor = config.sensors.get(sensor_key)
 
     if sensor == None:
@@ -42,8 +38,8 @@ def render_sensor_reading(lcd, sensors, sensor_key, start_line):
     lcd.text(label, PADDING, get_line_position(start_line), lcd.WHITE)
     lcd.text(f"{temp:.1f} C", PADDING, get_line_position(start_line + 1), lcd.WHITE)
     
-def render_home_screen(lcd, sensors):
-    render_sensor_reading(lcd, sensors, "temp_1", 1)
+def render_home_screen(lcd, sensors, config):
+    render_sensor_reading(lcd, sensors, "temp_1", 1, config)
 
     lcd.line(
         0,
@@ -53,7 +49,7 @@ def render_home_screen(lcd, sensors):
         lcd.DARK_GRAY,
     )
 
-    render_sensor_reading(lcd, sensors, "temp_2", 4)
+    render_sensor_reading(lcd, sensors, "temp_2", 4, config)
 
     lcd.line(
         0,
@@ -63,10 +59,10 @@ def render_home_screen(lcd, sensors):
         lcd.DARK_GRAY,
     )
 
-    render_sensor_reading(lcd, sensors, "temp_3", 7)
+    render_sensor_reading(lcd, sensors, "temp_3", 7, config)
     
-def render_sensor_screen(lcd, sensors, sensor_key):
-    render_sensor_reading(lcd, sensors, sensor_key, 1)
+def render_sensor_screen(lcd, sensors, sensor_key, config):
+    render_sensor_reading(lcd, sensors, sensor_key, 1, config)
 
 
 def render_error_message(lcd, err):
