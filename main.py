@@ -1,22 +1,23 @@
+from buttons import init_buttons
+from config import  load_config
+from lcd import LCD
 from machine import Pin
+import ds18x20
 import gc
 import onewire
-import ds18x20
 import utime
-from lcd import LCD
-from buttons import init_buttons
 
 PADDING = 8
-DEFAULT_INTERVAL_SECONDS = 5
 LINE_HEIGHT = 8
 
-
-SENSORS_MAP = {
-    "temp_1": {"id": "0xb20b2551d0e81428", "name": "Temp 1"},
-    "temp_2": {"id": "0xb10b2551cf9fc728", "name": "Temp 2"},
-    "temp_3": {"id": "0x460b2551a7326c28", "name": "Temp 3"},
-}
-
+try:
+    config = load_config()
+except OSError:
+    print("ERROR: config.json not found!")
+    raise OSError("config.json file is required")
+except ValueError as e:
+    print(f"ERROR: Invalid config.json: {e}")
+    raise
 
 class Screen:
     HOME = 0
@@ -96,18 +97,18 @@ def get_line_position(line):
 
 
 def render_sensor_reading(lcd, sensors, sensor_key, start_line):
-    sensor = SENSORS_MAP.get(sensor_key)
+    sensor = config.sensors.get(sensor_key)
 
     if sensor == None:
         raise ValueError(f"Sensor with key: {sensor_key} not found")
 
-    sensor_id = sensor["id"]
-    label = sensor["name"]
+    sensor_id = sensor.id
+    label = sensor.label
 
     sensor_reading = find_sensor_by_id(sensors, sensor_id)
 
     if sensor_reading == None:
-        raise ValueError(f"Could not find readings for sensor key: {sensor_key}")
+        raise ValueError(f"Could not find readings for sensor id:{sensor_id}, label:{label}")
 
     temp = sensor_reading["temp"]
 
@@ -167,7 +168,7 @@ def render_error_message(lcd, err):
         lines[-1] = lines[-1][:37] + "..."
     
     y_position = PADDING
-    lcd.text("Error:", PADDING, y_position, lcd.BLUE)
+    lcd.text("Error:", PADDING, y_position, lcd.RED)
     y_position += LINE_HEIGHT + PADDING
     
     for line in lines:
@@ -175,6 +176,7 @@ def render_error_message(lcd, err):
         y_position += LINE_HEIGHT + PADDING
     
     lcd.show()
+
 
 def render_sensor_screen(lcd, sensors, sensor_key):
     render_sensor_reading(lcd, sensors, sensor_key, 1)
@@ -191,7 +193,7 @@ def monitor():
         sensors_monitor = SensorsMonitor()
 
         last_read = 0
-        read_interval = DEFAULT_INTERVAL_SECONDS * 1000
+        read_interval = config.refresh_interval * 1000
 
         first_render = True
         last_screen = app_state["screen"]
@@ -225,7 +227,7 @@ def monitor():
                     render_sensor_screen(lcd, sensors, "temp_3")
                 else:
                     raise ValueError(
-                        f"Unable to render screen {app_state['screen']}: Not renderer available"
+                        f"Unable to render screen {app_state['screen']}: No renderer available"
                     )
 
                 print(f"Screen render: {current_screen}")
