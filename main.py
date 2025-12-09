@@ -139,6 +139,43 @@ def render_home_screen(lcd, sensors):
     render_sensor_reading(lcd, sensors, "temp_3", 7)
 
 
+def render_error_message(lcd, err):
+    lcd.fill(lcd.BLACK)
+    
+    error_text = str(err)
+    
+    max_chars = 40
+    words = error_text.split(' ')
+    lines = []
+    current_line = ""
+    
+    for word in words:
+        test_line = current_line + (" " if current_line else "") + word
+        
+        if len(test_line) <= max_chars:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    
+    if current_line:
+        lines.append(current_line)
+    
+    if len(lines) > 12:
+        lines = lines[:12]
+        lines[-1] = lines[-1][:37] + "..."
+    
+    y_position = PADDING
+    lcd.text("Error:", PADDING, y_position, lcd.BLUE)
+    y_position += LINE_HEIGHT + PADDING
+    
+    for line in lines:
+        lcd.text(line, PADDING, y_position, lcd.WHITE)
+        y_position += LINE_HEIGHT + PADDING
+    
+    lcd.show()
+
 def render_sensor_screen(lcd, sensors, sensor_key):
     render_sensor_reading(lcd, sensors, sensor_key, 1)
 
@@ -148,56 +185,60 @@ def monitor():
 
     gc.collect()
 
-    init_buttons(app_state)
+    try:
+        init_buttons(app_state)
 
-    sensors_monitor = SensorsMonitor()
+        sensors_monitor = SensorsMonitor()
 
-    last_read = 0
-    read_interval = DEFAULT_INTERVAL_SECONDS * 1000
+        last_read = 0
+        read_interval = DEFAULT_INTERVAL_SECONDS * 1000
 
-    first_render = True
-    last_screen = app_state["screen"]
+        first_render = True
+        last_screen = app_state["screen"]
 
-    sensors = []
+        sensors = []
 
-    while True:
-        gc.collect()
+        while True:
+            gc.collect()
 
-        current_screen = app_state["screen"]
-        screen_changed = last_screen != current_screen
+            current_screen = app_state["screen"]
+            screen_changed = last_screen != current_screen
 
-        current_time = utime.ticks_ms()
-        should_read = (utime.ticks_diff(current_time, last_read)) > read_interval
+            current_time = utime.ticks_ms()
+            should_read = (utime.ticks_diff(current_time, last_read)) > read_interval
 
-        if should_read:
-            print(f"Reading sensors")
-            sensors = sensors_monitor.read_sensors()
-            last_read = current_time
+            if should_read:
+                print(f"Reading sensors")
+                sensors = sensors_monitor.read_sensors()
+                last_read = current_time
 
-        if screen_changed or first_render or should_read:
-            lcd.fill(lcd.BLACK)
+            if screen_changed or first_render or should_read:
+                lcd.fill(lcd.BLACK)
 
-            if app_state["screen"] == Screen.HOME:
-                render_home_screen(lcd, sensors)
-            elif app_state["screen"] == Screen.SENSOR_1:
-                render_sensor_screen(lcd, sensors,  "temp_1")
-            elif app_state["screen"] == Screen.SENSOR_2:
-                render_sensor_screen(lcd, sensors,  "temp_2")
-            elif app_state["screen"] == Screen.SENSOR_3:
-                render_sensor_screen(lcd, sensors, "temp_3")
-            else:
-                raise ValueError(
-                    f"Unable to render screen {app_state['screen']}: Not renderer available"
-                )
+                if app_state["screen"] == Screen.HOME:
+                    render_home_screen(lcd, sensors)
+                elif app_state["screen"] == Screen.SENSOR_1:
+                    render_sensor_screen(lcd, sensors,  "temp_1")
+                elif app_state["screen"] == Screen.SENSOR_2:
+                    render_sensor_screen(lcd, sensors,  "temp_2")
+                elif app_state["screen"] == Screen.SENSOR_3:
+                    render_sensor_screen(lcd, sensors, "temp_3")
+                else:
+                    raise ValueError(
+                        f"Unable to render screen {app_state['screen']}: Not renderer available"
+                    )
 
-            print(f"Screen render: {current_screen}")
+                print(f"Screen render: {current_screen}")
 
-            lcd.show()
+                lcd.show()
 
-        first_render = False
-        last_screen = current_screen
+            first_render = False
+            last_screen = current_screen
 
-        utime.sleep(0.05)
+            utime.sleep(0.05)
+    except Exception as e:
+        print(f"Could not render data: {e}")
+        render_error_message(lcd, e)
 
 
 if __name__ == "__main__":

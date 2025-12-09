@@ -42,14 +42,14 @@ class LCD(framebuf.FrameBuffer):
 
         self.init_display()
 
-        self.RED = 0x001F      # Blue bits used for Red
-        self.GREEN = 0x07E0    # Green stays the same (middle bits)
-        self.BLUE = 0xF800     # Red bits used for Blue
-        self.WHITE = 0xFFFF    # All bits set (white is white)
-        self.BLACK = 0x0000    # All bits off (black is black)
-        self.YELLOW = 0x07FF   # Green + Red (0x07E0 + 0x001F)
-        self.CYAN = 0xFFE0     # Green + Blue (0x07E0 + 0xF800)
-        self.MAGENTA = 0xF81F  # Red + Blue (0x001F + 0xF800)
+        self.RED = 0x001F      # Red in BGR mode
+        self.GREEN = 0x07E0    # Green (same in both modes)
+        self.BLUE = 0xF800     # Blue in BGR mode
+        self.WHITE = 0xFFFF    # White
+        self.BLACK = 0x0000    # Black
+        self.YELLOW = 0x07FF   # Red + Green in BGR
+        self.CYAN = 0xFFE0     # Green + Blue in BGR
+        self.MAGENTA = 0xF81F  # Red + Blue in BGR
         self.DARK_GRAY = 0x4208
         self.LIGHT_GRAY = 0xC618
         self.ORANGE = 0x051F   # Red + some Green
@@ -77,7 +77,7 @@ class LCD(framebuf.FrameBuffer):
         self.reset(1)
 
         self.write_cmd(0x36)
-        self.write_data(0xA0)  # BGR565 Colours
+        self.write_data(0xA8)  # BGR mode with landscape rotation
 
         self.write_cmd(0x3A)
         self.write_data(0x05)
