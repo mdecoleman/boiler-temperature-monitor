@@ -95,11 +95,11 @@ def get_line_position(line):
     return line_position
 
 
-def render_sensor_reading(lcd, sensors, key, start_line):
-    sensor = SENSORS_MAP.get(key)
+def render_sensor_reading(lcd, sensors, sensor_key, start_line):
+    sensor = SENSORS_MAP.get(sensor_key)
 
     if sensor == None:
-        raise ValueError(f"Sensor with key: {key} not found")
+        raise ValueError(f"Sensor with key: {sensor_key} not found")
 
     sensor_id = sensor["id"]
     label = sensor["name"]
@@ -107,7 +107,7 @@ def render_sensor_reading(lcd, sensors, key, start_line):
     sensor_reading = find_sensor_by_id(sensors, sensor_id)
 
     if sensor_reading == None:
-        raise ValueError(f"Could not find readings for sensor key: {key}")
+        raise ValueError(f"Could not find readings for sensor key: {sensor_key}")
 
     temp = sensor_reading["temp"]
 
@@ -139,24 +139,8 @@ def render_home_screen(lcd, sensors):
     render_sensor_reading(lcd, sensors, "temp_3", 7)
 
 
-def render_sensor_screen(lcd, sensors, key):
-    render_sensor_reading(lcd, sensors, key, 1)
-
-
-def render_current_screen(lcd, sensors, screen):
-    """Render the current screen based on screen value"""
-    lcd.fill(lcd.BLACK)
-
-    if screen == Screen.HOME:
-        render_home_screen(lcd, sensors)
-    elif screen == Screen.SENSOR_1:
-        render_sensor_screen(lcd, sensors, "temp_1")
-    elif screen == Screen.SENSOR_2:
-        render_sensor_screen(lcd, sensors, "temp_2")
-    elif screen == Screen.SENSOR_3:
-        render_sensor_screen(lcd, sensors, "temp_3")
-
-    lcd.show()
+def render_sensor_screen(lcd, sensors, sensor_key):
+    render_sensor_reading(lcd, sensors, sensor_key, 1)
 
 
 def monitor():
@@ -196,11 +180,11 @@ def monitor():
             if app_state["screen"] == Screen.HOME:
                 render_home_screen(lcd, sensors)
             elif app_state["screen"] == Screen.SENSOR_1:
-                lcd.text("Sensor 1", 0, 0, lcd.WHITE)
+                render_sensor_screen(lcd, sensors,  "temp_1")
             elif app_state["screen"] == Screen.SENSOR_2:
-                lcd.text("Sensor 2", 0, 0, lcd.WHITE)
+                render_sensor_screen(lcd, sensors,  "temp_2")
             elif app_state["screen"] == Screen.SENSOR_3:
-                lcd.text("Sensor 3", 0, 0, lcd.WHITE)
+                render_sensor_screen(lcd, sensors, "temp_3")
             else:
                 raise ValueError(
                     f"Unable to render screen {app_state['screen']}: Not renderer available"
