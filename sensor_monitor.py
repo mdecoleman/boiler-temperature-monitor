@@ -5,7 +5,7 @@ import ds18x20
 
 class SensorsMonitor:
     def __init__(self):
-        self._pin = Pin(18, Pin.IN)
+        self._pin = Pin(26, Pin.IN)
         self._one_wire_bus = onewire.OneWire(self._pin)
         self._one_wire_sensors = ds18x20.DS18X20(self._one_wire_bus)
 

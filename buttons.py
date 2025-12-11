@@ -5,7 +5,7 @@ import utime
 class ButtonType:
     TOP_LEFT = 2
     TOP_RIGHT = 3
-    BOTTOM_LEFT = 17
+    BOTTOM_LEFT = 14
     BOTTOM_RIGHT = 15
 
 
