@@ -40,8 +40,8 @@ class Button:
 def on_button_press(button_id):
     state["last_button_press"] = utime.ticks_ms()
 
-    if not state["backlight_on"]:
-        state["backlight_on"] = True
+    if not state["awake"]:
+        state["awake"] = True
         return
 
     if button_id == ButtonType.TOP_LEFT:

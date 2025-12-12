@@ -3,9 +3,9 @@ from config import load_config
 from lcd import LCD
 from renderer import render_home_screen, render_sensor_screen, render_error_message
 from sensor_monitor import SensorsMonitor
+import wirless
 import gc
 import utime
-import network
 
 try:
     config = load_config()
@@ -27,7 +27,7 @@ class Screen:
 app_state = {
     "screen": Screen.HOME,
     "last_button_press": utime.ticks_ms(),
-    "backlight_on": True,
+    "awake": True,
 }
 
 renderers = {
@@ -44,27 +44,11 @@ renderers = {
 }
 
 
-def disable_wireless():
-    """Disable WiFi and Bluetooth on Pico W/2W to save power."""
-    try:
-        wlan = network.WLAN(network.STA_IF)
-        wlan.active(False)
-
-        try:
-            import bluetooth
-            bluetooth.BLE().active(False)
-        except (ImportError, AttributeError):
-            pass
-    except Exception as e:
-        print(f"Error disabling wireless: {e}")
-
-
 def monitor():
+    wirless.disable()
+
     lcd = LCD()
-
     gc.collect()
-
-    disable_wireless()
 
     try:
         init_buttons(app_state)
@@ -91,12 +75,10 @@ def monitor():
             )
 
             if should_turn_off_screen:
-                if app_state["backlight_on"]:
+                if app_state["awake"]:
                     print("Turning off screen")
-                    lcd.fill(lcd.BLACK)
-                    lcd.backlight(0)
-                    lcd.show()
-                    app_state["backlight_on"] = False
+                    lcd.sleep()
+                    app_state["awake"] = False
             else:
                 should_read = (
                     utime.ticks_diff(current_time, last_read)
@@ -112,9 +94,8 @@ def monitor():
 
                 if should_render:
                     print("rendering screen")
-                    lcd.fill(lcd.BLACK)
-                    lcd.backlight(1)
-                    app_state["backlight_on"] = True
+                    lcd.wake()
+                    app_state["awake"] = True
 
                     if app_state["screen"] not in renderers:
                         raise ValueError(
