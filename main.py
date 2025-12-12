@@ -5,6 +5,7 @@ from renderer import render_home_screen, render_sensor_screen, render_error_mess
 from sensor_monitor import SensorsMonitor
 import gc
 import utime
+import network
 
 try:
     config = load_config()
@@ -43,10 +44,27 @@ renderers = {
 }
 
 
+def disable_wireless():
+    """Disable WiFi and Bluetooth on Pico W/2W to save power."""
+    try:
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(False)
+
+        try:
+            import bluetooth
+            bluetooth.BLE().active(False)
+        except (ImportError, AttributeError):
+            pass
+    except Exception as e:
+        print(f"Error disabling wireless: {e}")
+
+
 def monitor():
     lcd = LCD()
 
     gc.collect()
+
+    disable_wireless()
 
     try:
         init_buttons(app_state)
@@ -63,8 +81,6 @@ def monitor():
         sensors = sensors_monitor.read_sensors()
 
         while True:
-            gc.collect()
-
             current_time = utime.ticks_ms()
             current_screen = app_state["screen"]
             screen_changed = last_screen != current_screen
@@ -90,6 +106,7 @@ def monitor():
                     print(f"Reading sensors")
                     sensors = sensors_monitor.read_sensors()
                     last_read = current_time
+                    gc.collect()
 
                 should_render = screen_changed or should_read
 
@@ -107,6 +124,7 @@ def monitor():
                     renderers[app_state["screen"]](lcd, sensors, config)
                     print(f"Screen render: {current_screen}")
                     lcd.show()
+                    gc.collect()
 
             last_screen = current_screen
 
