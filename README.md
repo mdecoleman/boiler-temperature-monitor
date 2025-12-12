@@ -71,10 +71,10 @@ LCD Display (ST7789 - SPI):
 └─ GND   → GND
 
 Buttons:
-├─ Top Left     → GPIO 2
-├─ Top Right    → GPIO 3
-├─ Bottom Left  → GPIO 17
-└─ Bottom Right → GPIO 15
+├─ Top Left     → GPIO 15
+├─ Top Right    → GPIO 14
+├─ Bottom Left  → GPIO 3
+└─ Bottom Right → GPIO 2
 
 Temperature Sensors (DS18B20 - OneWire):
 ├─ Data  → GPIO 18 (with 4.7kΩ pull-up to 3.3V)
@@ -117,32 +117,18 @@ Yellow → Data (GPIO 18)
    ```
 
 3. **Upload files to Pico**
-   
-   Upload these files to the Pico using Thonny or mpremote:
-   ```
-   main.py       - Main application loop
-   lcd.py        - LCD display driver
-   buttons.py    - Button handler with debouncing
-   ```
 
-4. **Configure sensor IDs**
-   
-   Run the project once to see sensor IDs in console output:
-   ```python
-   # Console output will show:
-   Sensor 1: 25.5°C, ID: 0xb20b2551d0e81428
-   Sensor 2: 30.2°C, ID: 0xb10b2551cf9fc728
-   Sensor 3: 22.8°C, ID: 0x460b2551a7326c28
-   ```
-   
-   Update `SENSORS_MAP` in `main.py` with your sensor IDs:
-   ```python
-   SENSORS_MAP = {
-       "temp_1": {"id": "0xYOUR_SENSOR_1_ID", "name": "Flow Temp"},
-       "temp_2": {"id": "0xYOUR_SENSOR_2_ID", "name": "Return Temp"},
-       "temp_3": {"id": "0xYOUR_SENSOR_3_ID", "name": "Hot Water"},
-   }
-   ```
+   Upload these files using Thonny or mpremote:
+   - `main.py` - Main application loop
+   - `lcd.py` - LCD display driver
+   - `buttons.py` - Button handler with debouncing
+   - `config.py` - Configuration loader
+   - `renderer.py` - Screen rendering functions
+   - `sensor_monitor.py` - Temperature sensor interface
+
+4. **Create config.json**
+
+   Create a `config.json` file on the Pico with your sensor details (see Configuration section above).
 
 5. **Mount sensors on boiler**
    
@@ -153,17 +139,24 @@ Yellow → Data (GPIO 18)
 
 ## 🎮 Usage
 
+### Screen Auto-Off
+
+- Screen automatically turns off after **10 seconds** of inactivity
+- Prevents burn-in and saves power
+- Press any button to wake the screen
+
 ### Button Controls
 
-- **Top Left** - Cycle through screens (Home → Sensor 1 → Sensor 2 → Sensor 3 → Home)
-- **Top Right** - *(Not currently assigned)*
-- **Bottom Left** - *(Not currently assigned)*
-- **Bottom Right** - *(Not currently assigned)*
+- **Top Left** - Wake screen if off, otherwise cycle through screens (Home → Sensor 1 → Sensor 2 → Sensor 3 → Home)
+- **Top Right** - Wake screen if off *(No action if screen is on)*
+- **Bottom Left** - Wake screen if off *(No action if screen is on)*
+- **Bottom Right** - Wake screen if off *(No action if screen is on)*
 
 ### Screen Views
 
 **Home Screen** - All three temperatures displayed
-```
+
+```text
 ┌──────────────────────────┐
 │ Flow Temp                │
 │ 65.2 C                   │
@@ -180,31 +173,39 @@ Yellow → Data (GPIO 18)
 
 ## 🔧 Configuration
 
-### Adjust Update Interval
+Configuration is managed through `config.json`. Create a file with your sensor details:
 
-Change sensor reading frequency in `main.py`:
-```python
-DEFAULT_INTERVAL_SECONDS = 5  # Read sensors every 5 seconds
+```json
+{
+  "refresh_interval": 5,
+  "sensors": {
+    "temp_1": {
+      "id": "0xb20b2551d0e81428",
+      "label": "Flow Temperature"
+    },
+    "temp_2": {
+      "id": "0xb10b2551cf9fc728",
+      "label": "Return Temperature"
+    },
+    "temp_3": {
+      "id": "0x460b2551a7326c28",
+      "label": "Hot Water"
+    }
+  }
+}
 ```
 
-### Customize Temperature Thresholds
+### Settings
 
-Modify color coding in `main.py`:
-```python
-def get_color_for_temp(lcd, temp):
-    if temp > 70:
-        return lcd.RED      # Too hot
-    elif temp > 65:
-        return lcd.YELLOW   # Warm
-    elif temp < 55:
-        return lcd.BLUE     # Cool
-    else:
-        return lcd.WHITE    # Normal
-```
+- **refresh_interval** - How often to read sensors (seconds). Default: 5
+- **screen_timeout** - Auto-off timeout (seconds). Default: 10
+- **sensor.id** - OneWire ROM ID of the sensor (must start with `0x`)
+- **sensor.label** - Display name for the sensor
 
 ### Button Debounce Time
 
-Adjust button responsiveness in `buttons.py`:
+Adjust button responsiveness in [buttons.py:19](buttons.py#L19):
+
 ```python
 self.debounce_ms = 200  # 200ms debounce (increase if double-pressing)
 ```
@@ -282,15 +283,18 @@ boiler-temp-monitor/
 3. **Button Handling** (GPIO Interrupts)
    - Hardware interrupts for instant response
    - Software debouncing (200ms) prevents bounce
-   - No polling loop needed - event-driven
+   - If screen is off, any button press turns it back on
+   - If screen is on, button presses execute their normal functions
 
 4. **Main Loop**
    ```python
    while True:
-       check_for_screen_changes()    # 50ms polling
-       read_sensors_if_time()        # Every 5 seconds
-       update_display_if_needed()
-       sleep(0.05)                   # Short sleep for responsiveness
+       if timeout_expired:
+           turn_off_screen()          # Auto-off after inactivity
+       else:
+           read_sensors_if_time()     # Every 5 seconds
+           render_if_needed()         # When data/screen changes
+       sleep(0.05)                    # 50ms polling interval
    ```
 
 ## 🔬 Technical Details
