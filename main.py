@@ -2,7 +2,7 @@ from buttons import init_buttons
 from config import load_config
 from lcd import LCD
 from renderer import render_home_screen, render_sensor_screen, render_error_message
-from sensor_monitor import SensorsMonitor
+from sensor_reader import SensorReader
 
 import gc
 import utime
@@ -57,14 +57,14 @@ def monitor():
     try:
         init_buttons(app_state)
 
-        sensors_monitor = SensorsMonitor()
+        sensor_reader = SensorReader()
 
         refresh_interval = config.refresh_interval * 1000
         screen_timeout = config.screen_timeout * 1000
 
         screen = app_state["screen"]
 
-        sensors = sensors_monitor.read_sensors()
+        sensors = sensor_reader.read_all()
 
         while True:
             current_time = utime.ticks_ms()
@@ -103,7 +103,7 @@ def monitor():
 
                 print(f"Screen changed to {current_screen}")
             elif should_update:
-                sensors = sensors_monitor.read_sensors()
+                sensors = sensor_reader.read_all()
                 gc.collect()
 
                 app_state["last_update"] = current_time

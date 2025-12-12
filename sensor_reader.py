@@ -1,17 +1,17 @@
 from machine import Pin
+import ds18x20
 import onewire
 import utime
-import ds18x20
 
 
-class SensorsMonitor:
+class SensorReader:
     def __init__(self):
         self._pin = Pin(26, Pin.IN)
         self._one_wire_bus = onewire.OneWire(self._pin)
         self._one_wire_sensors = ds18x20.DS18X20(self._one_wire_bus)
         self._sensor_ids = None
 
-    def read_sensors(self):
+    def read_all(self):
         sensors = []
 
         try:
