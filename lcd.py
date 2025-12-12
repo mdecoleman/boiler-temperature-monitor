@@ -1,13 +1,14 @@
+from constants import (
+    LCD_PIN_BL,
+    LCD_PIN_CLK,
+    LCD_PIN_CS,
+    LCD_PIN_DC,
+    LCD_PIN_DIN,
+    LCD_PIN_RST,
+)
 from machine import Pin, SPI
-import framebuf
 
-# LCD Pin definitions
-PIN_LCD_DC = 8
-PIN_LCD_CS = 9
-PIN_LCD_CLK = 10
-PIN_LCD_DIN = 11
-PIN_LCD_RST = 12
-PIN_LCD_BL = 13
+import framebuf
 
 
 class LCD(framebuf.FrameBuffer):
@@ -16,21 +17,21 @@ class LCD(framebuf.FrameBuffer):
         self.height = 240
         self.rotation = rotation
 
-        self.chip_select = Pin(PIN_LCD_CS, Pin.OUT)
+        self.chip_select = Pin(LCD_PIN_CS, Pin.OUT)
         self.chip_select(1)
-        self.reset = Pin(PIN_LCD_RST, Pin.OUT)
-        self.backlight = Pin(PIN_LCD_BL, Pin.OUT)
+        self.reset = Pin(LCD_PIN_RST, Pin.OUT)
+        self.backlight = Pin(LCD_PIN_BL, Pin.OUT)
         self.backlight(0)
         self.spi = SPI(
             1,
             100000_000,
             polarity=0,
             phase=0,
-            sck=Pin(PIN_LCD_CLK),
-            mosi=Pin(PIN_LCD_DIN),
+            sck=Pin(LCD_PIN_CLK),
+            mosi=Pin(LCD_PIN_DIN),
             miso=None,
         )
-        self.data_command = Pin(PIN_LCD_DC, Pin.OUT)
+        self.data_command = Pin(LCD_PIN_DC, Pin.OUT)
         self.data_command(1)
         self.buffer = bytearray(self.height * self.width * 2)
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)

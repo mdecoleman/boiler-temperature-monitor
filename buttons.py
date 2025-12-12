@@ -1,12 +1,18 @@
+from constants import (
+    BUTTON_PIN_BOTTOM_LEFT,
+    BUTTON_PIN_BOTTOM_RIGHT,
+    BUTTON_PIN_TOP_LEFT,
+    BUTTON_PIN_TOP_RIGHT,
+)
 from machine import Pin
 import utime
 
 
 class ButtonType:
-    BOTTOM_RIGHT = 2
-    BOTTOM_LEFT = 3
-    TOP_RIGHT = 14
-    TOP_LEFT = 15
+    BOTTOM_RIGHT = BUTTON_PIN_BOTTOM_RIGHT
+    BOTTOM_LEFT = BUTTON_PIN_BOTTOM_LEFT
+    TOP_RIGHT = BUTTON_PIN_TOP_RIGHT
+    TOP_LEFT = BUTTON_PIN_TOP_LEFT
 
 
 class Button:
