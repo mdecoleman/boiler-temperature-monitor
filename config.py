@@ -1,16 +1,22 @@
 import json
 
 DEFAULT_REFRESH_INTERVAL_SECONDS = 5
+DEFAULT_SCREEN_TIMEOUT_SECONDS = 5
+
 
 class Sensor:
     def __init__(self, id, label):
         self.id = id
         self.label = label
 
+
 class Config:
-    def __init__(self, refresh_interval: int, sensors: dict[str,Sensor]):
+    def __init__(
+        self, refresh_interval: int, sensors: dict[str, Sensor], screen_timeout
+    ):
         self.refresh_interval = refresh_interval
         self.sensors = sensors
+        self.screen_timeout = screen_timeout
 
 
 def validate_sensors(sensors):
@@ -22,10 +28,10 @@ def validate_sensors(sensors):
 
         sensor = sensors[key]
 
-        if 'id' not in sensor:
+        if "id" not in sensor:
             raise ValueError(f"Sensor {key} missing 'id' field")
 
-        if 'label' not in sensor:
+        if "label" not in sensor:
             raise ValueError(f"Sensor {key} missing 'label' field")
 
         if not sensor["id"].startswith("0x"):
@@ -58,13 +64,13 @@ def load_config(config_path="config.json"):
             validate_refresh_interval(config)
 
         sensor_objects = {
-            key: Sensor(s["id"], s["label"])
-            for key, s in config["sensors"].items()
+            key: Sensor(s["id"], s["label"]) for key, s in config["sensors"].items()
         }
 
         return Config(
             refresh_interval=config["refresh_interval"],
             sensors=sensor_objects,
+            screen_timeout=DEFAULT_SCREEN_TIMEOUT_SECONDS,
         )
 
     except OSError as e:

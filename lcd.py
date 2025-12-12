@@ -11,18 +11,16 @@ PIN_LCD_BL = 13
 
 
 class LCD(framebuf.FrameBuffer):
-    def __init__(self):
+    def __init__(self, rotation=90):
         self.width = 320
         self.height = 240
+        self.rotation = rotation
 
         self.chip_select = Pin(PIN_LCD_CS, Pin.OUT)
         self.chip_select(1)
-
         self.reset = Pin(PIN_LCD_RST, Pin.OUT)
-
         self.backlight = Pin(PIN_LCD_BL, Pin.OUT)
         self.backlight(0)
-
         self.spi = SPI(
             1,
             100000_000,
@@ -32,28 +30,24 @@ class LCD(framebuf.FrameBuffer):
             mosi=Pin(PIN_LCD_DIN),
             miso=None,
         )
-
         self.data_command = Pin(PIN_LCD_DC, Pin.OUT)
         self.data_command(1)
-
         self.buffer = bytearray(self.height * self.width * 2)
-
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
-
         self.init_display()
 
-        self.RED = 0x001F      # Red in BGR mode
-        self.GREEN = 0x07E0    # Green (same in both modes)
-        self.BLUE = 0xF800     # Blue in BGR mode
-        self.WHITE = 0xFFFF    # White
-        self.BLACK = 0x0000    # Black
-        self.YELLOW = 0x07FF   # Red + Green in BGR
-        self.CYAN = 0xFFE0     # Green + Blue in BGR
+        self.RED = 0x001F  # Red in BGR mode
+        self.GREEN = 0x07E0  # Green (same in both modes)
+        self.BLUE = 0xF800  # Blue in BGR mode
+        self.WHITE = 0xFFFF  # White
+        self.BLACK = 0x0000  # Black
+        self.YELLOW = 0x07FF  # Red + Green in BGR
+        self.CYAN = 0xFFE0  # Green + Blue in BGR
         self.MAGENTA = 0xF81F  # Red + Blue in BGR
         self.DARK_GRAY = 0x4208
         self.LIGHT_GRAY = 0xC618
-        self.ORANGE = 0x051F   # Red + some Green
-        self.PURPLE = 0x8010   # Red + some Blue
+        self.ORANGE = 0x051F  # Red + some Green
+        self.PURPLE = 0x8010  # Red + some Blue
         self.PINK = 0x0C1F
 
     def write_cmd(self, cmd):
@@ -76,8 +70,16 @@ class LCD(framebuf.FrameBuffer):
         self.reset(0)
         self.reset(1)
 
+        rotations = {
+            0: 0x00,  # Portrait
+            90: 0x60,  # Landscape
+            180: 0xC0,  # Portrait (180°)
+            270: 0xA0,  # Landscape (180°)
+        }
+        BGR_MODE = 0x08  # BGR color order bit
+
         self.write_cmd(0x36)
-        self.write_data(0xA8)  # BGR mode with landscape rotation
+        self.write_data(rotations[self.rotation] | BGR_MODE)
 
         self.write_cmd(0x3A)
         self.write_data(0x05)

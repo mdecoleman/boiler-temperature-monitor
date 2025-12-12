@@ -16,7 +16,7 @@ class Button:
         self.callback = callback
 
         self.last_trigger_time = 0
-        self.debounce_ms = 200 
+        self.debounce_ms = 200
         self.last_state = 1
 
         self.pin.irq(
@@ -38,7 +38,7 @@ class Button:
 
 
 def on_button_press(button_id):
-    print(f"Button {button_id} pressed!")
+    state["last_button_press"] = utime.ticks_ms()
 
     if button_id == ButtonType.TOP_LEFT:
         state["screen"] = (state["screen"] + 1) % 4
