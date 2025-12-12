@@ -25,12 +25,15 @@ class Screen:
     SENSOR_3 = 3
 
 
-app_state = {
-    "awake": True,
-    "last_button_press": 0,
-    "last_update": 0,
-    "screen": Screen.HOME,
-}
+class AppState:
+    def __init__(self):
+        self.awake = True
+        self.last_button_press = 0
+        self.last_update = 0
+        self.screen = Screen.HOME
+
+
+app_state = AppState()
 
 renderers = {
     Screen.HOME: lambda lcd, sensors, cfg: render_home_screen(lcd, sensors, cfg),
@@ -62,17 +65,17 @@ def monitor():
         refresh_interval = config.refresh_interval * 1000
         screen_timeout = config.screen_timeout * 1000
 
-        screen = app_state["screen"]
+        screen = app_state.screen
 
         sensors = sensor_reader.read_all()
 
         while True:
             current_time = utime.ticks_ms()
 
-            awake = app_state["awake"]
-            current_screen = app_state["screen"]
-            last_button_press = app_state["last_button_press"]
-            last_update = app_state["last_update"]
+            awake = app_state.awake
+            current_screen = app_state.screen
+            last_button_press = app_state.last_button_press
+            last_update = app_state.last_update
 
             screen_changed = screen != current_screen
 
@@ -87,18 +90,18 @@ def monitor():
             if should_sleep:
                 if awake:
                     lcd.sleep()
-                    app_state["awake"] = False
+                    app_state.awake = False
                     print("Asleep")
             elif not awake:
                 lcd.wake()
-                renderers[app_state["screen"]](lcd, sensors, config)
+                renderers[app_state.screen](lcd, sensors, config)
                 lcd.show()
-                app_state["awake"] = True
+                app_state.awake = True
                 print("Awake")
             elif screen_changed:
                 screen = current_screen
                 lcd.clear()
-                renderers[app_state["screen"]](lcd, sensors, config)
+                renderers[app_state.screen](lcd, sensors, config)
                 lcd.show()
 
                 print(f"Screen changed to {current_screen}")
@@ -106,9 +109,9 @@ def monitor():
                 sensors = sensor_reader.read_all()
                 gc.collect()
 
-                app_state["last_update"] = current_time
+                app_state.last_update = current_time
 
-                renderers[app_state["screen"]](lcd, sensors, config)
+                renderers[app_state.screen](lcd, sensors, config)
                 lcd.show()
 
                 print(f"Refreshed data")

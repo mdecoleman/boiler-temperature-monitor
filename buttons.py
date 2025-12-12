@@ -43,30 +43,32 @@ class Button:
                 self.last_state = current_state
 
 
-def on_button_press(button_id):
-    state["last_button_press"] = utime.ticks_ms()
+def create_button_handler(app_state):
+    def on_button_press(button_id):
+        app_state.last_button_press = utime.ticks_ms()
 
-    if state["awake"] == False:
-        return
+        if app_state.awake == False:
+            return
 
-    if button_id == ButtonType.TOP_LEFT:
-        state["screen"] = (state["screen"] + 1) % 4
+        if button_id == ButtonType.TOP_LEFT:
+            app_state.screen = (app_state.screen + 1) % 4
 
-    elif button_id == ButtonType.TOP_RIGHT:
-        pass
+        elif button_id == ButtonType.TOP_RIGHT:
+            pass
 
-    elif button_id == ButtonType.BOTTOM_LEFT:
-        pass
+        elif button_id == ButtonType.BOTTOM_LEFT:
+            pass
 
-    elif button_id == ButtonType.BOTTOM_RIGHT:
-        pass
+        elif button_id == ButtonType.BOTTOM_RIGHT:
+            pass
+
+    return on_button_press
 
 
 def init_buttons(app_state):
-    global state
-    state = app_state
+    handler = create_button_handler(app_state)
 
-    Button(ButtonType.TOP_LEFT, callback=on_button_press)
-    Button(ButtonType.TOP_RIGHT, callback=on_button_press)
-    Button(ButtonType.BOTTOM_LEFT, callback=on_button_press)
-    Button(ButtonType.BOTTOM_RIGHT, callback=on_button_press)
+    Button(ButtonType.TOP_LEFT, callback=handler)
+    Button(ButtonType.TOP_RIGHT, callback=handler)
+    Button(ButtonType.BOTTOM_LEFT, callback=handler)
+    Button(ButtonType.BOTTOM_RIGHT, callback=handler)
