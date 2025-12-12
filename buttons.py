@@ -3,10 +3,10 @@ import utime
 
 
 class ButtonType:
-    TOP_LEFT = 2
-    TOP_RIGHT = 3
-    BOTTOM_LEFT = 14
-    BOTTOM_RIGHT = 15
+    BOTTOM_RIGHT = 2
+    BOTTOM_LEFT = 3
+    TOP_RIGHT = 14
+    TOP_LEFT = 15
 
 
 class Button:
@@ -39,6 +39,10 @@ class Button:
 
 def on_button_press(button_id):
     state["last_button_press"] = utime.ticks_ms()
+
+    if not state["backlight_on"]:
+        state["backlight_on"] = True
+        return
 
     if button_id == ButtonType.TOP_LEFT:
         state["screen"] = (state["screen"] + 1) % 4
