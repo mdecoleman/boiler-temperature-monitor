@@ -1,7 +1,11 @@
+from app_state import AppState
 from buttons import init_buttons
 from config import load_config
 from lcd import LCD
-from renderer import render_home_screen, render_sensor_screen, render_error_message
+from screen_renderer import (
+    render_error_message,
+    renderers,
+)
 from sensor_reader import SensorReader
 
 import gc
@@ -18,35 +22,7 @@ except ValueError as e:
     raise
 
 
-class Screen:
-    HOME = 0
-    SENSOR_1 = 1
-    SENSOR_2 = 2
-    SENSOR_3 = 3
-
-
-class AppState:
-    def __init__(self):
-        self.awake = True
-        self.last_button_press = 0
-        self.last_update = 0
-        self.screen = Screen.HOME
-
-
 app_state = AppState()
-
-renderers = {
-    Screen.HOME: lambda lcd, sensors, cfg: render_home_screen(lcd, sensors, cfg),
-    Screen.SENSOR_1: lambda lcd, sensors, cfg: render_sensor_screen(
-        lcd, sensors, "temp_1", cfg
-    ),
-    Screen.SENSOR_2: lambda lcd, sensors, cfg: render_sensor_screen(
-        lcd, sensors, "temp_2", cfg
-    ),
-    Screen.SENSOR_3: lambda lcd, sensors, cfg: render_sensor_screen(
-        lcd, sensors, "temp_3", cfg
-    ),
-}
 
 
 def monitor():
