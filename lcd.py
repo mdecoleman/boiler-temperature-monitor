@@ -173,12 +173,14 @@ class LCD(framebuf.FrameBuffer):
         self.spi.write(self.buffer)
         self.chip_select(1)
 
-    def sleep(self):
-        self.backlight(0)
+    def clear(self):
         self.fill(self.BLACK)
         self.show()
 
+    def sleep(self):
+        self.backlight(0)
+        self.clear()
+
     def wake(self):
         self.backlight(1)
-        self.fill(self.BLACK)
-        self.show()
+        self.clear()

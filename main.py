@@ -59,7 +59,7 @@ def monitor():
 
         sensors_monitor = SensorsMonitor()
 
-        read_interval = config.refresh_interval * 1000
+        refresh_interval = config.refresh_interval * 1000
         screen_timeout = config.screen_timeout * 1000
 
         screen = app_state["screen"]
@@ -69,56 +69,49 @@ def monitor():
         while True:
             current_time = utime.ticks_ms()
 
-            current_screen = app_state["screen"]
-            last_update = app_state["last_update"]
             awake = app_state["awake"]
-            
+            current_screen = app_state["screen"]
+            last_button_press = app_state["last_button_press"]
+            last_update = app_state["last_update"]
+
             screen_changed = screen != current_screen
 
-            if screen_changed:
-                screen = current_screen
-
             should_sleep = (
-                utime.ticks_diff(current_time, app_state["last_button_press"])
-                > screen_timeout
+                utime.ticks_diff(current_time, last_button_press) > screen_timeout
             )
+
+            should_update = (
+                utime.ticks_diff(current_time, last_update)
+            ) > refresh_interval
 
             if should_sleep:
                 if awake:
-                    print("Sleeping")
                     lcd.sleep()
                     app_state["awake"] = False
-            else:
-                should_update = (
-                    utime.ticks_diff(current_time, last_update)
-                ) > read_interval
+                    print("Asleep")
+            elif not awake:
+                lcd.wake()
+                renderers[app_state["screen"]](lcd, sensors, config)
+                lcd.show()
+                app_state["awake"] = True
+                print("Awake")
+            elif screen_changed:
+                screen = current_screen
+                lcd.clear()
+                renderers[app_state["screen"]](lcd, sensors, config)
+                lcd.show()
 
-                if should_update:
-                    print(f"Updating readings")
-                    sensors = sensors_monitor.read_sensors()
-                    app_state["last_update"] = current_time
-                    gc.collect()
+                print(f"Screen changed to {current_screen}")
+            elif should_update:
+                sensors = sensors_monitor.read_sensors()
+                gc.collect()
 
-                should_render = screen_changed or should_update
-                
-                print(awake)
+                app_state["last_update"] = current_time
 
-                if not awake:
-                    lcd.wake()
-                    app_state["awake"] = True
+                renderers[app_state["screen"]](lcd, sensors, config)
+                lcd.show()
 
-                if should_render:
-                    print("rendering screen")
-
-                    if app_state["screen"] not in renderers:
-                        raise ValueError(
-                            f"Unable to render screen {app_state['screen']}: No renderer available"
-                        )
-
-                    renderers[app_state["screen"]](lcd, sensors, config)
-                    print(f"Screen render: {current_screen}")
-                    lcd.show()
-                    gc.collect()
+                print(f"Refreshed data")
 
             utime.sleep(0.05)
     except Exception as e:

@@ -40,6 +40,9 @@ class Button:
 def on_button_press(button_id):
     state["last_button_press"] = utime.ticks_ms()
 
+    if state["awake"] == False:
+        return
+
     if button_id == ButtonType.TOP_LEFT:
         state["screen"] = (state["screen"] + 1) % 4
 
