@@ -9,6 +9,7 @@ from screen_renderer import (
 )
 from sensor_reader import SensorReader
 
+import asyncio
 import gc
 import utime
 
@@ -25,8 +26,11 @@ except ValueError as e:
 app_state = AppState()
 
 
-def monitor():
-    pico2W = Pico2W().disable_wifi().disable_ble()
+async def monitor():
+    pico2W = Pico2W()
+
+    await pico2W.disable_wifi()
+    await pico2W.disable_ble()
 
     lcd = LCD()
     lcd.wake()
@@ -104,4 +108,4 @@ def monitor():
 
 
 if __name__ == "__main__":
-    monitor()
+    asyncio.run(monitor())
