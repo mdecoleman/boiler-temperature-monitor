@@ -33,14 +33,13 @@ class Button:
         current_time = utime.ticks_ms()
         current_state = self.pin.value()
 
-        if utime.ticks_diff(current_time, self.last_trigger_time) > self.debounce_ms:
-            if self.last_state == 1 and current_state == 0:
-                self.last_trigger_time = current_time
+        if current_state != self.last_state:
+            if utime.ticks_diff(current_time, self.last_trigger_time) > self.debounce_ms:
                 self.last_state = current_state
-                self.callback(self.button_id)
-            elif self.last_state == 0 and current_state == 1:
                 self.last_trigger_time = current_time
-                self.last_state = current_state
+
+                if current_state == 0:
+                    self.callback(self.button_id)
 
 
 def create_button_handler(app_state):
