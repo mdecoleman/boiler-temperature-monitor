@@ -12,11 +12,10 @@ class SensorReader:
         self._one_wire_sensors = ds18x20.DS18X20(self._one_wire_bus)
         self._sensor_ids = None
 
-    def _set_9bit_precision(self):
-        if self._sensor_ids is None:
-            raise RuntimeError("Cannot set precision before sensors are scanned")
+    def _scan_and_set_precision(self):
+        sensor_ids = self._one_wire_sensors.scan()
 
-        for sensor_id in self._sensor_ids:
+        for sensor_id in sensor_ids:
             self._one_wire_bus.reset()
             self._one_wire_bus.select_rom(sensor_id)
             self._one_wire_bus.writebyte(0x4E)
@@ -25,13 +24,15 @@ class SensorReader:
             self._one_wire_bus.writebyte(0x1F)
             self._one_wire_bus.reset()
 
+        return sensor_ids
+    
+
     def read_all(self):
         sensors = []
 
         try:
             if self._sensor_ids is None:
-                self._sensor_ids = self._one_wire_sensors.scan()
-                self._set_9bit_precision()
+                self._sensor_ids = self._scan_and_set_precision()
 
             count = len(self._sensor_ids)
 
