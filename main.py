@@ -99,9 +99,9 @@ async def monitor():
                 print(f"Refreshed data")
 
             if awake:
-                utime.sleep(0.05)
+                await asyncio.sleep_ms(50)
             else:
-                utime.sleep(0.5)
+                await asyncio.sleep_ms(500)
     except Exception as e:
         print(f"Could not render data: {e}")
         render_error_message(lcd, e)

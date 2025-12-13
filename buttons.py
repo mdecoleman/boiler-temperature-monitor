@@ -5,6 +5,7 @@ from constants import (
     BUTTON_PIN_TOP_RIGHT,
 )
 from machine import Pin
+import asyncio
 import utime
 
 
@@ -30,23 +31,30 @@ class Button:
         )
 
     def _irq_handler(self, _):
+        """IRQ handler that schedules async callback"""
         current_time = utime.ticks_ms()
         current_state = self.pin.value()
 
         if current_state != self.last_state:
-            if utime.ticks_diff(current_time, self.last_trigger_time) > self.debounce_ms:
+            if (
+                utime.ticks_diff(current_time, self.last_trigger_time)
+                > self.debounce_ms
+            ):
                 self.last_state = current_state
                 self.last_trigger_time = current_time
 
                 if current_state == 0:
-                    self.callback(self.button_id)
+                    asyncio.create_task(self.callback(self.button_id))
 
 
-def create_button_handler(app_state):
-    def on_button_press(button_id):
+def create_async_button_handler(app_state):
+    async def on_button_press_async(button_id):
+        was_awake = app_state.awake
         app_state.last_button_press = utime.ticks_ms()
 
-        if app_state.awake == False:
+        await asyncio.sleep_ms(10)
+
+        if not was_awake:
             return
 
         if button_id == ButtonType.TOP_LEFT:
@@ -61,11 +69,11 @@ def create_button_handler(app_state):
         elif button_id == ButtonType.BOTTOM_RIGHT:
             pass
 
-    return on_button_press
+    return on_button_press_async
 
 
 def init_buttons(app_state):
-    handler = create_button_handler(app_state)
+    handler = create_async_button_handler(app_state)
 
     Button(ButtonType.TOP_LEFT, callback=handler)
     Button(ButtonType.TOP_RIGHT, callback=handler)
