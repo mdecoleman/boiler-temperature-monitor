@@ -67,16 +67,12 @@ class Monitor:
 
     async def initialize(self):
         print("Initializing")
-        print("--------------------")
         await self._pico2W.disable_ble()
         await self._pico2W.disable_wifi()
-
-        button_handler.init(self._app_state)
-
         self._sensors = await self._sensor_reader.read_all()
-
+        button_handler.init(self._app_state)
+        
         self._initialized = True
-        print("--------------------")
 
     async def run(self):
         self._throw_if_not_initalized()
@@ -115,7 +111,6 @@ class Monitor:
                     self._screen, self._sensors, self._config
                 )
 
-            if self._app_state.awake:
-                await asyncio.sleep_ms(50)
-            else:
-                await asyncio.sleep_ms(500)
+            sleep_duration = 50 if self._app_state.awake else 500
+
+            await asyncio.sleep_ms(sleep_duration)
