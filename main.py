@@ -2,6 +2,7 @@ from app_state import AppState
 from buttons import init_buttons
 from config import load_config
 from lcd import LCD
+from pico import Pico2W
 from screen_renderer import (
     render_error_message,
     renderers,
@@ -9,6 +10,7 @@ from screen_renderer import (
 from sensor_reader import SensorReader
 
 import gc
+import machine
 import utime
 import wirless
 
@@ -26,7 +28,7 @@ app_state = AppState()
 
 
 def monitor():
-    wirless.disable()
+    pico2W = Pico2W().disable_wifi().disable_ble()
 
     lcd = LCD()
     lcd.wake()
@@ -66,9 +68,11 @@ def monitor():
             if should_sleep:
                 if awake:
                     lcd.sleep()
+                    pico2W.sleep()
                     app_state.awake = False
                     print("Asleep")
             elif not awake:
+                pico2W.wake()
                 lcd.wake()
                 renderers[app_state.screen](lcd, sensors, config)
                 lcd.show()
@@ -92,7 +96,10 @@ def monitor():
 
                 print(f"Refreshed data")
 
-            utime.sleep(0.05)
+            if awake:
+                utime.sleep(0.05)
+            else:
+                utime.sleep(0.5)
     except Exception as e:
         print(f"Could not render data: {e}")
         render_error_message(lcd, e)
