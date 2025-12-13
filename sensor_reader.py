@@ -1,8 +1,9 @@
 from constants import SENSOR_PIN
 from machine import Pin
+
+import asyncio
 import ds18x20
 import onewire
-import utime
 
 
 class SensorReader:
@@ -25,9 +26,8 @@ class SensorReader:
             self._one_wire_bus.reset()
 
         return sensor_ids
-    
 
-    def read_all(self):
+    async def read_all(self):
         sensors = []
 
         try:
@@ -43,7 +43,8 @@ class SensorReader:
                 raise OSError(f"Expected 3 temperature sensors, {count} found")
 
             self._one_wire_sensors.convert_temp()
-            utime.sleep(0.1)
+
+            await asyncio.sleep_ms(100)
 
             for id in self._sensor_ids:
                 rom_hex = hex(int.from_bytes(id, "little"))

@@ -57,22 +57,19 @@ def create_async_button_handler(app_state):
         if not was_awake:
             return
 
-        if button_id == ButtonType.TOP_LEFT:
+        if button_id == ButtonType.BOTTOM_LEFT:
             app_state.screen = (app_state.screen + 1) % 4
-
-        elif button_id == ButtonType.TOP_RIGHT:
-            pass
-
-        elif button_id == ButtonType.BOTTOM_LEFT:
-            pass
-
         elif button_id == ButtonType.BOTTOM_RIGHT:
+            pass
+        if button_id == ButtonType.TOP_LEFT:
+            pass
+        elif button_id == ButtonType.TOP_RIGHT:
             pass
 
     return on_button_press_async
 
 
-def init_buttons(app_state):
+def init(app_state):
     handler = create_async_button_handler(app_state)
 
     Button(ButtonType.TOP_LEFT, callback=handler)
