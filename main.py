@@ -10,9 +10,7 @@ from screen_renderer import (
 from sensor_reader import SensorReader
 
 import gc
-import machine
 import utime
-import wirless
 
 try:
     config = load_config()
